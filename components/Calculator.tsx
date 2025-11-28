@@ -3,6 +3,7 @@ import { TAMANHO_PORCAO } from '../constants';
 import { MetricsCard } from './MetricsCard';
 import { Package, Tag, Hash, Save, Trash2, History as HistoryIcon, ArrowRight, Eraser, Share2, Loader2 } from 'lucide-react';
 import { HistoryItem } from '../types';
+import html2canvas from 'html2canvas';
 
 const Calculator: React.FC = () => {
   // State for manual inputs
@@ -90,8 +91,7 @@ const Calculator: React.FC = () => {
     setIsSharing(true);
 
     try {
-      // @ts-ignore - html2canvas is loaded from CDN
-      const canvas = await window.html2canvas(resultsRef.current, {
+      const canvas = await html2canvas(resultsRef.current, {
         scale: 2, // Higher resolution
         backgroundColor: '#f3f4f6', // Match the container bg
         logging: false,
