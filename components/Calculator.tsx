@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TAMANHO_PORCAO } from '../constants';
 import { MetricsCard } from './MetricsCard';
-import { Package, Tag, Hash, Save, Trash2, History as HistoryIcon, ArrowRight, Eraser, Share2, Loader2, Link as LinkIcon, Check } from 'lucide-react';
+import { Package, Tag, Hash, Save, Trash2, History as HistoryIcon, ArrowRight, Eraser, Share2, Loader2 } from 'lucide-react';
 import { HistoryItem } from '../types';
 
 const Calculator: React.FC = () => {
@@ -13,7 +13,6 @@ const Calculator: React.FC = () => {
   const [portionUnits, setPortionUnits] = useState<string>(String(TAMANHO_PORCAO));
   
   const [isSharing, setIsSharing] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
   
   // Ref for capturing image
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -84,22 +83,6 @@ const Calculator: React.FC = () => {
     };
 
     setHistory(prev => [newItem, ...prev]);
-  };
-
-  const handleCopyLink = () => {
-    const params = new URLSearchParams();
-    if (productName) params.set('prod', productName);
-    if (packageCost) params.set('cost', packageCost);
-    if (sellingPrice) params.set('price', sellingPrice);
-    if (packageUnits) params.set('punits', packageUnits);
-    if (portionUnits) params.set('sunits', portionUnits);
-
-    const newUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    
-    navigator.clipboard.writeText(newUrl).then(() => {
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
-    });
   };
 
   const handleShareImage = async () => {
@@ -309,17 +292,6 @@ const Calculator: React.FC = () => {
       <div className="space-y-4 mb-10">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resultado Atual</h3>
-          {results && (
-             <div className="flex gap-2">
-               <button 
-                  onClick={handleCopyLink}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${linkCopied ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
-               >
-                 {linkCopied ? <Check size={12} /> : <LinkIcon size={12} />}
-                 {linkCopied ? 'Link Copiado!' : 'Copiar Link'}
-               </button>
-             </div>
-          )}
         </div>
         
         {results ? (
