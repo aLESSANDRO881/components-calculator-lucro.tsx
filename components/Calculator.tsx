@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TAMANHO_PORCAO } from '../constants';
 import { MetricsCard } from './MetricsCard';
-import { Package, Tag, Hash, Save, Trash2, History as HistoryIcon, ArrowRight, Eraser, Share2, Loader2 } from 'lucide-react';
+import { Package, Tag, Hash, Save, Trash2, History as HistoryIcon, ArrowRight, Eraser, Share2, Loader2, Link as LinkIcon, Check } from 'lucide-react';
 import { HistoryItem } from '../types';
 
 const Calculator: React.FC = () => {
@@ -11,13 +11,31 @@ const Calculator: React.FC = () => {
   const [sellingPrice, setSellingPrice] = useState<string>('');
   const [packageUnits, setPackageUnits] = useState<string>('30');
   const [portionUnits, setPortionUnits] = useState<string>(String(TAMANHO_PORCAO));
+  
   const [isSharing, setIsSharing] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   
   // Ref for capturing image
   const resultsRef = useRef<HTMLDivElement>(null);
   
   // State for history
   const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  // Load from URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pName = params.get('prod');
+    const pCost = params.get('cost');
+    const pPrice = params.get('price');
+    const pUnits = params.get('punits');
+    const sUnits = params.get('sunits');
+
+    if (pName) setProductName(decodeURIComponent(pName));
+    if (pCost) setPackageCost(pCost);
+    if (pPrice) setSellingPrice(pPrice);
+    if (pUnits) setPackageUnits(pUnits);
+    if (sUnits) setPortionUnits(sUnits);
+  }, []);
 
   const results = useMemo(() => {
     const cost = parseFloat(packageCost);
@@ -66,7 +84,22 @@ const Calculator: React.FC = () => {
     };
 
     setHistory(prev => [newItem, ...prev]);
-    // Note: We do NOT clear the form here anymore, so the user can share the image with the name intact.
+  };
+
+  const handleCopyLink = () => {
+    const params = new URLSearchParams();
+    if (productName) params.set('prod', productName);
+    if (packageCost) params.set('cost', packageCost);
+    if (sellingPrice) params.set('price', sellingPrice);
+    if (packageUnits) params.set('punits', packageUnits);
+    if (portionUnits) params.set('sunits', portionUnits);
+
+    const newUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    
+    navigator.clipboard.writeText(newUrl).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
   };
 
   const handleShareImage = async () => {
@@ -130,6 +163,8 @@ const Calculator: React.FC = () => {
     // Reset defaults
     setPackageUnits('30');
     setPortionUnits(String(TAMANHO_PORCAO));
+    // Clear URL params
+    window.history.pushState({}, '', window.location.pathname);
   };
 
   // Formatters
@@ -138,10 +173,9 @@ const Calculator: React.FC = () => {
 
   const formatPercent = (val: number) => `${val.toFixed(0)}%`;
 
-  // Updated thresholds for the new formula (100% is break-even)
   const getMarginColor = (margin: number) => {
-    if (margin < 100) return 'text-red-600'; // Prejuízo (Venda < Custo)
-    if (margin < 130) return 'text-yellow-600'; // Margem Baixa (< 30% acima do custo)
+    if (margin < 100) return 'text-red-600'; // Prejuízo
+    if (margin < 130) return 'text-yellow-600'; // Margem Baixa
     return 'text-green-600'; // Saudável
   };
 
@@ -276,9 +310,15 @@ const Calculator: React.FC = () => {
         <div className="flex items-center justify-between px-1">
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Resultado Atual</h3>
           {results && (
-             <span className="text-xs text-slate-400">
-               Custo Unitário: {formatCurrency(parseFloat(packageCost) / parseFloat(packageUnits))}
-             </span>
+             <div className="flex gap-2">
+               <button 
+                  onClick={handleCopyLink}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${linkCopied ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+               >
+                 {linkCopied ? <Check size={12} /> : <LinkIcon size={12} />}
+                 {linkCopied ? 'Link Copiado!' : 'Copiar Link'}
+               </button>
+             </div>
           )}
         </div>
         
